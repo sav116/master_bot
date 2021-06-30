@@ -4,7 +4,6 @@ import sqlite3
 import time
 import config, keyboard
 from datetime import datetime, datetime, timedelta
-import json
 
 bot = telebot.TeleBot(config.token)
 
