@@ -5,7 +5,8 @@ env = Env()
 env.read_env()
 
 token = env.str("BOT_TOKEN")  # Забираем значение типа str
-admins = env.list("ADMINS")  # Тут у нас будет список из админов
+admins = [1742008095, 819730005, 268018242, 292721851, 287981918]
+#admins = env.list("ADMINS")  # Тут у нас будет список из админов
 
 chat = "-1001586497619"
 coder = "1742008095"
