@@ -2,10 +2,16 @@ import telebot
 from telebot import types
 import sqlite3
 import time
-import config, keyboard
+import openpyxl
+
+from master_bot import config
+from master_bot import keyboard
+
 from datetime import datetime, datetime, timedelta
 
 bot = telebot.TeleBot(config.token)
+
+wb = openpyxl.load_workbook('prices.xlsx')
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -31,7 +37,7 @@ def send_welcome(message):
     else:
         bot.send_message(userid, f"Пиветствую {message.from_user.username} в нашем боте", reply_markup=keyboard.profile)
 
-@bot.message_handler(commands=['админ'])
+@bot.message_handler(commands=['admin'])
 def admin_menu(message):
     adm = []
     connect = sqlite3.connect('bot.db')
@@ -108,9 +114,9 @@ def text_menu(message):
     
     if message.text == "Узнать цену💵":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        send = bot.send_message(message.chat.id, "Введите модель вашего устройства📲")
-        bot.clear_step_handler_by_chat_id(message.chat.id)
-        bot.register_next_step_handler(send, view_price)
+        bot.send_message(message.chat.id, "Выберите производителя устройства📲", reply_markup=keyboard.choice_brand)
+        #bot.clear_step_handler_by_chat_id(message.chat.id)
+        #bot.register_next_step_handler(send, send_price)
     
     if message.text == "Вызвать курьера🏎":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
@@ -135,12 +141,6 @@ def text_menu(message):
         send = bot.send_message(message.chat.id, "Введите айди пользователя которому нужно списать балы")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send,min_cashback)
-
-
-
-
-
-
     
     
     if message.text == "Приеду в мастерскую🔧":
@@ -153,14 +153,27 @@ def text_menu(message):
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send,add_cashback)
 
-
-
-
-        
-
-
 @bot.callback_query_handler(func=lambda call: True)
 def answer(call):
+    if call.data == "apple":
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html", reply_markup=keyboard.apple_buttons)
+
+    elif "iPhone" in call.data or "ipad" in call.data or "watch" in call.data:
+        brand = "apple"
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+
+    if call.data == "huawei":
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+                         reply_markup=keyboard.huawei_buttons)
+
+    elif "Honor" in call.data or "Huawei" in call.data:
+        brand = "huawei"
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+
     if call.data == "reg":
         send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите свое ФИО",parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
@@ -219,9 +232,6 @@ def answer(call):
             bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n"\
             f"{e}")
 
-
-
-
 def diagnostic1(message):
     send = bot.send_message(message.chat.id,"Введите модель")
     bot.register_next_step_handler(send, diagnostic2)
@@ -250,7 +260,6 @@ def setadmin(message):
         except:
             bot.send_message(message.chat.id, "Ошибка❗️")
 
-            
 
     
     else:
@@ -325,12 +334,10 @@ def next_step2(message, colvo, model):
                                 f"📜Проблема: {problem}", parse_mode='html', reply_markup=key)
 
 
-        
                             
     except Exception as e:
         bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n"\
             f"{e}")
-
 
 
 
@@ -357,10 +364,7 @@ def register(message):
             "<b>Формат ввода: Петров Виктор Александрович</b>", parse_mode='html')
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, register)
-        
 
-   
-    
 
 @bot.message_handler(content_types=['contact'])
 def contact(message):
@@ -446,10 +450,6 @@ def min_money(message, chat_id, bal):
     else:
         bot.send_message(message.chat.id, "Не корректная сумма списания👿")
 
-
-
-    
-
 def setphone(message):
     try:
         new_phone = message.text
@@ -469,871 +469,20 @@ def setphone(message):
         bot.send_message(user_id, "Произошла ошибка")
 
 
-def view_price(message):
-    model = message.text
-    try:
-        if model.lower() in config.iphone5:
-            file = open("show_price/apple/iphone5.txt", "r",encoding="utf-8")
-            lines = file.readlines()
-            price = ""
-            for i in lines:
-                price = price + i + "\n"
-            
-            bot.send_message(message.chat.id, price, parse_mode="html", reply_markup=keyboard.delete)
-            file.close()
-        else:
-            if model.lower() in config.iphone6:
-                file = open("show_price/apple/iphone6.txt", "r",encoding="utf-8")
-                lines = file.readlines()
-                price = ""
-                for i in lines:
-                    price = price + i + "\n"
-                
-                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                file.close()
-            else:
-                if model.lower() in config.iphone6Plus:
-                    file = open("show_price/apple/iphone6Plus.txt", "r",encoding="utf-8")
-                    lines = file.readlines()
-                    price = ""
-                    for i in lines:
-                        price = price + i + "\n"
-                    
-                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                    file.close()
-                else:
-                    if model.lower() in config.iphone6s:
-                        file = open("show_price/apple/iphone6s.txt", "r",encoding="utf-8")
-                        lines = file.readlines()
-                        price = ""
-                        for i in lines:
-                            price = price + i + "\n"
-                    
-                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                        file.close()
-                    else:
-                        if model.lower() in config.iphone6sPlus:
-                            file = open("show_price/apple/iPhone6splus.txt", "r",encoding="utf-8")
-                            lines = file.readlines()
-                            price = ""
-                            for i in lines:
-                                price = price + i + "\n"
-                        
-                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                            file.close()
-                        else:
-                            if model.lower() in config.iphone7:
-                                file = open("show_price/apple/iPhone7.txt", "r",encoding="utf-8")
-                                lines = file.readlines()
-                                price = ""
-                                for i in lines:
-                                    price = price + i + "\n"
-                            
-                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                file.close()
-                            else:
-                                if model.lower() in config.iphone7Plus:
-                                    file = open("show_price/apple/iPhone7plus.txt", "r",encoding="utf-8")
-                                    lines = file.readlines()
-                                    price = ""
-                                    for i in lines:
-                                        price = price + i + "\n"
-                                
-                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                    file.close()
-                                else:
-                                    if model.lower() in config.iphone8:
-                                        file = open("show_price/apple/iPhone8.txt", "r",encoding="utf-8")
-                                        lines = file.readlines()
-                                        price = ""
-                                        for i in lines:
-                                            price = price + i + "\n"
-                                    
-                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                        file.close()
-                                    else:
-                                        if model.lower() in config.iphone8Plus:
-                                            file = open("show_price/apple/iPhone8plus.txt", "r",encoding="utf-8")
-                                            lines = file.readlines()
-                                            price = ""
-                                            for i in lines:
-                                                price = price + i + "\n"
-                                        
-                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                            file.close()
-                                        else:
-                                            if model.lower() in config.iphoneX:
-                                                file = open("show_price/apple/iPhoneX.txt", "r",encoding="utf-8")
-                                                lines = file.readlines()
-                                                price = ""
-                                                for i in lines:
-                                                    price = price + i + "\n"
-                                            
-                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                file.close()
-                                            else:
-                                                if model.lower() in config.iphoneXS:
-                                                    file = open("show_price/apple/iPhoneXS.txt", "r",encoding="utf-8")
-                                                    lines = file.readlines()
-                                                    price = ""
-                                                    for i in lines:
-                                                        price = price + i + "\n"
-                                                
-                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                    file.close()
-                                                else:
-                                                    if model.lower() in config.iPhoneXSMAX:
-                                                        file = open("show_price/apple/iPhoneXSMAX.txt", "r",encoding="utf-8")
-                                                        lines = file.readlines()
-                                                        price = ""
-                                                        for i in lines:
-                                                            price = price + i + "\n"
-                                                    
-                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                        file.close()
-                                                    else:
-                                                        if model.lower() in config.iPhoneXR:
-                                                            file = open("show_price/apple/iPhoneXR.txt", "r",encoding="utf-8")
-                                                            lines = file.readlines()
-                                                            price = ""
-                                                            for i in lines:
-                                                                price = price + i + "\n"
-                                                        
-                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                            file.close()
-                                                        else:
-                                                            if model.lower() in config.iPhone11:
-                                                                file = open("show_price/apple/iPhone11.txt", "r",encoding="utf-8")
-                                                                lines = file.readlines()
-                                                                price = ""
-                                                                for i in lines:
-                                                                    price = price + i + "\n"
-                                                            
-                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                file.close()
-                                                            else:
-                                                                if model.lower() in config.iPhone11Pro:
-                                                                    file = open("show_price/apple/iPhone11Pro.txt", "r",encoding="utf-8")
-                                                                    lines = file.readlines()
-                                                                    price = ""
-                                                                    for i in lines:
-                                                                        price = price + i + "\n"
-                                                                
-                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                    file.close()
-                                                                else:
-                                                                    if model.lower() in config.iPhone11ProMax:
-                                                                        file = open("show_price/apple/iPhone11ProMax.txt", "r",encoding="utf-8")
-                                                                        lines = file.readlines()
-                                                                        price = ""
-                                                                        for i in lines:
-                                                                            price = price + i + "\n"
-                                                                    
-                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                        file.close()
-                                                                    else:
-                                                                        if model.lower() in config.watch:
-                                                                            file = open("show_price/apple/watch.txt", "r",encoding="utf-8")
-                                                                            lines = file.readlines()
-                                                                            price = ""
-                                                                            for i in lines:
-                                                                                price = price + i + "\n"
-                                                                        
-                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                            file.close()
-                                                                        else:
-                                                                            if "айпад" in model.lower() or "ipad" in model.lower():
-                                                                                file = open("show_price/apple/ipad.txt", "r",encoding="utf-8")
-                                                                                lines = file.readlines()
-                                                                                price = ""
-                                                                                for i in lines:
-                                                                                    price = price + i + "\n"
-                                                                            
-                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                file.close()
-                                                                            else:
-                                                                                if model.lower() in config.samsungA10s:
-                                                                                    file = open("show_price/samsung/samsungA10s.txt", "r",encoding="utf-8")
-                                                                                    lines = file.readlines()
-                                                                                    price = ""
-                                                                                    for i in lines:
-                                                                                        price = price + i + "\n"
-                                                                                
-                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                    file.close()
-                                                                                else:
-                                                                                    if model.lower() in config.samsungA10:
-                                                                                        file = open("show_price/samsung/samsungA10.txt", "r",encoding="utf-8")
-                                                                                        lines = file.readlines()
-                                                                                        price = ""
-                                                                                        for i in lines:
-                                                                                            price = price + i + "\n"
-                                                                                    
-                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                        file.close()
-                                                                                    else:
-                                                                                        if model.lower() in config.samsungA20:
-                                                                                            file = open("show_price/samsung/samsungA20.txt", "r",encoding="utf-8")
-                                                                                            lines = file.readlines()
-                                                                                            price = ""
-                                                                                            for i in lines:
-                                                                                                price = price + i + "\n"
-                                                                                        
-                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                            file.close()
-                                                                                        else:
-                                                                                            if model.lower() in config.samsungA20s:
-                                                                                                file = open("show_price/samsung/samsungA20s.txt", "r",encoding="utf-8")
-                                                                                                lines = file.readlines()
-                                                                                                price = ""
-                                                                                                for i in lines:
-                                                                                                    price = price + i + "\n"
-                                                                                            
-                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                file.close()
-                                                                                            else:
-                                                                                                if model.lower() in config.samsungA21s:
-                                                                                                    file = open("show_price/samsung/samsungA21s.txt", "r",encoding="utf-8")
-                                                                                                    lines = file.readlines()
-                                                                                                    price = ""
-                                                                                                    for i in lines:
-                                                                                                        price = price + i + "\n"
-                                                                                                
-                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                    file.close()
-                                                                                                else:
-                                                                                                    if model.lower() in config.samsungA3:
-                                                                                                        file = open("show_price/samsung/samsungA3.txt", "r",encoding="utf-8")
-                                                                                                        lines = file.readlines()
-                                                                                                        price = ""
-                                                                                                        for i in lines:
-                                                                                                            price = price + i + "\n"
-                                                                                                    
-                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                        file.close()
-                                                                                                    else:
-                                                                                                        if model.lower() in config.samsungA30:
-                                                                                                            file = open("show_price/samsung/samsungA30.txt", "r",encoding="utf-8")
-                                                                                                            lines = file.readlines()
-                                                                                                            price = ""
-                                                                                                            for i in lines:
-                                                                                                                price = price + i + "\n"
-                                                                                                        
-                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                            file.close()
-                                                                                                        else:
-                                                                                                            if "samsung a31" in model.lower() or "samsunga31" in model.lower() or "samsung a 31" in model.lower() or "самсунг a31" in model.lower():
-                                                                                                                file = open("show_price/samsung/samsungA31.txt", "r",encoding="utf-8")
-                                                                                                                lines = file.readlines()
-                                                                                                                price = ""
-                                                                                                                for i in lines:
-                                                                                                                    price = price + i + "\n"
-                                                                                                            
-                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                file.close()
-                                                                                                            else:
-                                                                                                                if model.lower() in config.samsungA40:
-                                                                                                                    file = open("show_price/samsung/samsungA40.txt", "r",encoding="utf-8")
-                                                                                                                    lines = file.readlines()
-                                                                                                                    price = ""
-                                                                                                                    for i in lines:
-                                                                                                                        price = price + i + "\n"
-                                                                                                            
-                                                                                                                
-                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                    file.close()
-                                                                                                                else:
-                                                                                                                    if model.lower() in config.samsungA41:
-                                                                                                                        file = open("show_price/samsung/samsungA41.txt", "r",encoding="utf-8")
-                                                                                                                        lines = file.readlines()
-                                                                                                                        price = ""
-                                                                                                                        for i in lines:
-                                                                                                                            price = price + i + "\n"
-                                                                                                                    
-                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                        file.close()
-                                                                                                                    else:
-                                                                                                                        if model.lower() in config.samsungA5:
-                                                                                                                            file = open("show_price/samsung/samsungA5.txt", "r",encoding="utf-8")
-                                                                                                                            lines = file.readlines()
-                                                                                                                            price = ""
-                                                                                                                            for i in lines:
-                                                                                                                                price = price + i + "\n"
-                                                                                                                        
-                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                            file.close()
-                                                                                                                        else:
-                                                                                                                            if model.lower() in config.samsungA51:
-                                                                                                                                file = open("show_price/samsung/samsungA51.txt", "r",encoding="utf-8")
-                                                                                                                                lines = file.readlines()
-                                                                                                                                price = ""
-                                                                                                                                for i in lines:
-                                                                                                                                    price = price + i + "\n"
-                                                                                                                            
-                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                file.close()
-                                                                                                                            else:
-                                                                                                                                if model.lower() in config.samsungA6:
-                                                                                                                                    file = open("show_price/samsung/samsungA6.txt", "r",encoding="utf-8")
-                                                                                                                                    lines = file.readlines()
-                                                                                                                                    price = ""
-                                                                                                                                    for i in lines:
-                                                                                                                                        price = price + i + "\n"
-                                                                                                                                
-                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                    file.close()
-                                                                                                                                else:
-                                                                                                                                    if model.lower() in config.samsungA7:
-                                                                                                                                        file = open("show_price/samsung/samsungA7.txt", "r",encoding="utf-8")
-                                                                                                                                        lines = file.readlines()
-                                                                                                                                        price = ""
-                                                                                                                                        for i in lines:
-                                                                                                                                            price = price + i + "\n"
-                                                                                                                                    
-                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                        file.close()
-                                                                                                                                    else:
-                                                                                                                                        if model.lower() in config.samsungA70:
-                                                                                                                                            file = open("show_price/samsung/samsungA70.txt", "r",encoding="utf-8")
-                                                                                                                                            lines = file.readlines()
-                                                                                                                                            price = ""
-                                                                                                                                            for i in lines:
-                                                                                                                                                price = price + i + "\n"
-                                                                                                                                        
-                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                            file.close()
-                                                                                                                                        else:
-                                                                                                                                            if model.lower() in config.samsungA71:
-                                                                                                                                                file = open("show_price/samsung/samsungA71.txt", "r",encoding="utf-8")
-                                                                                                                                                lines = file.readlines()
-                                                                                                                                                price = ""
-                                                                                                                                                for i in lines:
-                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                            
-                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                file.close()
-                                                                                                                                            else:
-                                                                                                                                                if model.lower() in config.samsungA8:
-                                                                                                                                                    file = open("show_price/samsung/samsungA8.txt", "r",encoding="utf-8")
-                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                    price = ""
-                                                                                                                                                    for i in lines:
-                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                
-                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                    file.close()
-                                                                                                                                                else:
-                                                                                                                                                    if model.lower() in config.samsungA80:
-                                                                                                                                                        file = open("show_price/samsung/samsungA80.txt", "r",encoding="utf-8")
-                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                        price = ""
-                                                                                                                                                        for i in lines:
-                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                    
-                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                        file.close()
-                                                                                                                                                    else:
-                                                                                                                                                        if model.lower() in config.samsungA9:
-                                                                                                                                                            file = open("show_price/samsung/samsungA9.txt", "r",encoding="utf-8")
-                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                            price = ""
-                                                                                                                                                            for i in lines:
-                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                        
-                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                            file.close()
-                                                                                                                                                        else:
-                                                                                                                                                            if "samsung j2" in model.lower() or "самсунг j2" in model.lower():
-                                                                                                                                                                file = open("show_price/samsung/samsungJ2.txt", "r",encoding="utf-8")
-                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                price = ""
-                                                                                                                                                                for i in lines:
-                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                            
-                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                file.close()
-                                                                                                                                                            else:
-                                                                                                                                                                if "samsung j3" in model.lower() or "самсунг j3" in model.lower():
-                                                                                                                                                                    file = open("show_price/samsung/samsungJ3.txt", "r",encoding="utf-8")
-                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                    price = ""
-                                                                                                                                                                    for i in lines:
-                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                
-                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                    file.close()
-                                                                                                                                                                else:
-                                                                                                                                                                    if "samsung j4" in model.lower() or "самсунг j4" in model.lower():
-                                                                                                                                                                        file = open("show_price/samsung/samsungJ4.txt", "r",encoding="utf-8")
-                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                        price = ""
-                                                                                                                                                                        for i in lines:
-                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                    
-                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                        file.close()
-                                                                                                                                                                    else:
-                                                                                                                                                                        if "samsung j5" in model.lower() or "самсунг j5" in model.lower():
-                                                                                                                                                                            file = open("show_price/samsung/samsungJ5.txt", "r",encoding="utf-8")
-                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                            price = ""
-                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                        
-                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                            file.close()
-                                                                                                                                                                        else:
-                                                                                                                                                                            if "samsung j6" in model.lower() or "самсунг j6" in model.lower():
-                                                                                                                                                                                file = open("show_price/samsung/samsungJ6.txt", "r",encoding="utf-8")
-                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                price = ""
-                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                            
-                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                file.close()
-                                                                                                                                                                            else:
-                                                                                                                                                                                if "samsung j7" in model.lower() or "самсунг j7" in model.lower():
-                                                                                                                                                                                    file = open("show_price/samsung/samsungJ7.txt", "r",encoding="utf-8")
-                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                    price = ""
-                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                
-                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                    file.close()
-                                                                                                                                                                                else:
-                                                                                                                                                                                    if "samsung j8" in model.lower() or "самсунг j8" in model.lower():
-                                                                                                                                                                                        file = open("show_price/samsung/samsungJ8.txt", "r",encoding="utf-8")
-                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                        price = ""
-                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                    
-                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                        file.close()
-                                                                                                                                                                                    else:
-                                                                                                                                                                                        if "honor 7a" in model.lower() or "хонор 7а" in model.lower():
-                                                                                                                                                                                            file = open("show_price/Huawei/Honor7A.txt", "r",encoding="utf-8")
-                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                            price = ""
-                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                        
-                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                            file.close()
-                                                                                                                                                                                        else:
-                                                                                                                                                                                            if "honor 8" in model.lower() or "хонор 8" in model.lower():
-                                                                                                                                                                                                file = open("show_price/Huawei/Honor8.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                            
-                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                file.close()
-                                                                                                                                                                                            else:
-                                                                                                                                                                                                if "honor 9" in model.lower() or "хонор 9" in model.lower():
-                                                                                                                                                                                                    file = open("show_price/Huawei/Honor9.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                
-                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                else:
-                                                                                                                                                                                                    if "honor 10" in model.lower() or "хонор 10" in model.lower():
-                                                                                                                                                                                                        file = open("show_price/Huawei/Honor10.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                    
-                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                    else:
-                                                                                                                                                                                                        if "nova 3" in model.lower() or "нова 3" in model.lower():
-                                                                                                                                                                                                            file = open("show_price/Huawei/nova3.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                        
-                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                        else:
-                                                                                                                                                                                                            if "p smart" in model.lower() or "п смарт" in model.lower():
-                                                                                                                                                                                                                file = open("show_price/Huawei/Psmart.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                            
-                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                if "p9 lite" in model.lower() or "п9 лайт" in model.lower() or "p9" in model.lower() or "п9" in model.lower():
-                                                                                                                                                                                                                    file = open("show_price/Huawei/P9.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                
-                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                    if "p40 lite" in model.lower() or "п40 лайт" in model.lower() or "p40" in model.lower() or "п40" in model.lower():
-                                                                                                                                                                                                                        file = open("show_price/Huawei/P40.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                    
-                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                        if "p10 lite" in model.lower() or "п10 лайт" in model.lower() or "p10" in model.lower() or "п10" in model.lower():
-                                                                                                                                                                                                                            file = open("show_price/Huawei/P10.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                        
-                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                            if "p30 lite" in model.lower() or "п30 лайт" in model.lower() or "p30" in model.lower() or "п30" in model.lower():
-                                                                                                                                                                                                                                file = open("show_price/Huawei/P30.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                if "honor 20" in model.lower() or "хонор 20" in model.lower():
-                                                                                                                                                                                                                                    file = open("show_price/Huawei/Honor20.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                    if "mate" in model.lower():
-                                                                                                                                                                                                                                        file = open("show_price/Huawei/HuaweiMate.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                        if "nova" in model.lower() or "нова" in model.lower():
-                                                                                                                                                                                                                                            file = open("show_price/Huawei/nova.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                            if "nova 2" in model.lower() or "нова 2" in model.lower():
-                                                                                                                                                                                                                                                file = open("show_price/Huawei/nova2.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                if "nova 2" in model.lower() or "нова 2" in model.lower():
-                                                                                                                                                                                                                                                    file = open("show_price/Huawei/nova2.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                    if "honor 8a" in model.lower() or "хонор 8а" in model.lower():
-                                                                                                                                                                                                                                                        file = open("show_price/Huawei/Honor8A.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                        if "y6" in model.lower() or "y 6" in model.lower():
-                                                                                                                                                                                                                                                            file = open("show_price/Huawei/Y6.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                                            if "redmi 3" in model.lower() or "редми 3" in model.lower():
-                                                                                                                                                                                                                                                                file = open("show_price/xiaomi/Redmi3.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                                if "redmi 4" in model.lower() or "редми 4" in model.lower():
-                                                                                                                                                                                                                                                                    file = open("show_price/xiaomi/Redmi4.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                                    if "redmi 5" in model.lower() or "редми 5" in model.lower():
-                                                                                                                                                                                                                                                                        file = open("show_price/xiaomi/Redmi5.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                        if "redmi 6" in model.lower() or "редми 6" in model.lower():
-                                                                                                                                                                                                                                                                            file = open("show_price/xiaomi/Redmi6.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                                                            if "redmi 7" in model.lower() or "редми 7" in model.lower() or "redmi note 7" in model.lower() or "редми нот 7" in model.lower():
-                                                                                                                                                                                                                                                                                file = open("show_price/xiaomi/Redmi7.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                                                if "redmi 8" in model.lower() or "редми 8" in model.lower() or "redmi note 8" in model.lower() or "редми нот 8" in model.lower():
-                                                                                                                                                                                                                                                                                    file = open("show_price/xiaomi/Redmi8.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                                                    if "redmi 9a" in model.lower() or "редми 9а" in model.lower() or "redmi 9c" in model.lower() or "редми 9с" in model.lower():
-                                                                                                                                                                                                                                                                                        file = open("show_price/xiaomi/Redmi9a.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                        if "redmi 9" in model.lower() or "редми 9" in model.lower() or "redmi note 9" in model.lower() or "редми нот 9" in model.lower():
-                                                                                                                                                                                                                                                                                            file = open("show_price/xiaomi/Redmi9.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                                                                            if "mi a2 lite" in model.lower() or "ми а2 лайт" in model.lower():
-                                                                                                                                                                                                                                                                                                file = open("show_price/xiaomi/MiA2lite.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                                                                if "redmi s2" in model.lower() or "редми с2" in model.lower():
-                                                                                                                                                                                                                                                                                                    file = open("show_price/xiaomi/RedmiS2.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                                                                    if "mi a1" in model.lower() or "ми а1" in model.lower():
-                                                                                                                                                                                                                                                                                                        file = open("show_price/xiaomi/MiA1.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                                        if "mi a1" in model.lower() or "ми а1" in model.lower():
-                                                                                                                                                                                                                                                                                                            file = open("show_price/xiaomi/MiA1.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                                                                                            if "mi a2" in model.lower() or "ми а2" in model.lower():
-                                                                                                                                                                                                                                                                                                                file = open("show_price/xiaomi/MiA2.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                                                                                if "mi a3" in model.lower() or "ми а3" in model.lower():
-                                                                                                                                                                                                                                                                                                                    file = open("show_price/xiaomi/MiA3.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                                                                                    if "mi a3" in model.lower() or "ми а3" in model.lower():
-                                                                                                                                                                                                                                                                                                                        file = open("show_price/xiaomi/MiA3.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                                                        if "mi 6" in model.lower() or "ми 6" in model.lower() or "mi 6c" in model.lower() or "ми 6ц" in model.lower():
-                                                                                                                                                                                                                                                                                                                            file = open("show_price/xiaomi/Mi6.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                            lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                            price = ""
-                                                                                                                                                                                                                                                                                                                            for i in lines:
-                                                                                                                                                                                                                                                                                                                                price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                                                            bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                            file.close()
-                                                                                                                                                                                                                                                                                                                        else:
-                                                                                                                                                                                                                                                                                                                            if "mi 8" in model.lower() or "ми 8" in model.lower() or "mi 8 lite" in model.lower() or "ми 8 лайт" in model.lower():
-                                                                                                                                                                                                                                                                                                                                file = open("show_price/xiaomi/Mi8.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                                lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                                price = ""
-                                                                                                                                                                                                                                                                                                                                for i in lines:
-                                                                                                                                                                                                                                                                                                                                    price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                                                                bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                                file.close()
-                                                                                                                                                                                                                                                                                                                            else:
-                                                                                                                                                                                                                                                                                                                                if "mi 9" in model.lower() or "ми 9" in model.lower() or "mi 9 lite" in model.lower() or "ми 9 лайт" in model.lower() or "mi 9t" in model.lower() or "ми 9т" in model.lower():
-                                                                                                                                                                                                                                                                                                                                    file = open("show_price/xiaomi/Mi9.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                                    lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                                    price = ""
-                                                                                                                                                                                                                                                                                                                                    for i in lines:
-                                                                                                                                                                                                                                                                                                                                        price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                                                                    bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                                    file.close()
-                                                                                                                                                                                                                                                                                                                                else:
-                                                                                                                                                                                                                                                                                                                                    if "pocophone" in model.lower() or "покофон" in model.lower():
-                                                                                                                                                                                                                                                                                                                                        file = open("show_price/xiaomi/Pocophone.txt", "r",encoding="utf-8")
-                                                                                                                                                                                                                                                                                                                                        lines = file.readlines()
-                                                                                                                                                                                                                                                                                                                                        price = ""
-                                                                                                                                                                                                                                                                                                                                        for i in lines:
-                                                                                                                                                                                                                                                                                                                                            price = price + i + "\n"
-                                                                                                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, price, parse_mode="html",reply_markup=keyboard.delete)
-                                                                                                                                                                                                                                                                                                                                        file.close()
-                                                                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                                                                        connect = sqlite3.connect('bot.db')
-                                                                                                                                                                                                                                                                                                                                        q = connect.cursor()
-                                                                                                                                                                                                                                                                                                                                        res = q.execute("SELECT * FROM master_phone").fetchone()
-                                                                                                                                                                                                                                                                                                                                        phone = res[1]
-                                                                                                                                                                                                                                                                                                                                        bot.send_message(message.chat.id, "<b>Ваша модель не найдена в базе</b>\n"\
-                                                                                                                                                                                                                                                                                                                                            f"Обратитесь к нашему мастеру {phone}", reply_markup='html')
-    except:
-        connect = sqlite3.connect('bot.db')
-        q = connect.cursor()
-        res = q.execute("SELECT * FROM master_phone").fetchone()
-        phone = res[1]
-        bot.send_message(message.chat.id, "<b>Возниклы трудности с поиском вашей модели</b>\n"\
-            f"Обратитесь к нашему мастеру {phone}", reply_markup='html')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                                                                                                                                            
-
-
-
-
-
-
-
-
-
-
-
-                                                
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
+def get_price(brand, model):
+    ws = wb[brand]
+    result = ""
+    for column in range(1,30):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip():
+                result+=model+":\n\n"
+                for row in range(2, 50):
+                    cell_price_value = str(ws.cell(row=row, column=column).value)
+                    if cell_price_value != "None":
+                        result += cell_price_value + '\n'
+                return result
+    return "Не могу найти цены на устройство"
 
 
 while True:

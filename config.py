@@ -5,17 +5,14 @@ env = Env()
 env.read_env()
 
 token = env.str("BOT_TOKEN")  # Забираем значение типа str
+
+chat = "-1001244336776" # test master bot
+coder = "292721851" # Artem S
 admins = [1742008095, 819730005, 268018242, 292721851, 287981918]
-#admins = env.list("ADMINS")  # Тут у нас будет список из админов
-
-chat = "-1001586497619"
-coder = "1742008095"
-
 delivery = {}
 cura = ["Вызвать курьера🏎"]
 
 sam = ["Приеду в мастерскую🔧"]
-
 
 
 iphone5 = ["iphone 5", "iphone 5c", "iphone 5s", "iphone se", "айфон 5", "айфон 5ц", "айфон 5 се", "айфон 5s", "айфон 5se"]
@@ -32,7 +29,7 @@ iphone7 = ["iphone 7", "iphone7", "айфон 7", "айфон7"]
 
 iphone7Plus = ["iphone7+", "iphone 7+", "iphone7 +", "iphone 7 +", "айфон 7+", "айфон 7 плюс", "iphone 7 plus"]
 
-iphone8 = ["iphone8", "iphone 8"]
+iphone8 = ["iphone8", "iphone 8", "iphone8", "iphone 8", "айфон 8", "айфон 8", "iphone 8"]
 
 iphone8Plus = ["iphone8+", "iphone 8+", "iphone8 +", "iphone 8 +", "айфон 8 +", "айфон 8+", "айфон 8 плюс", "iphone 8 plus"]
 
@@ -52,7 +49,9 @@ iPhoneXR = ["iphone xr", "iphonexr", "iphone 10r", "iphone10r", "айфон 10р
 
 watch = ["apple watch", "applewatch", "епл вотч", "эпл вотч", "епл воч", "эпл воч", "часы"]
 
-samsungA10 = ["samsung a10", "samsunga10", "samsung a 10", "самсунг a10"]
+ipad = ["ipad", "айпад"]
+
+samsungA10 = ["samsung a10", "samsunga10", "samsung a 10", "самсунг a10", "самсунг а10"]
 
 samsungA10s = ["samsung a10s", "samsunga10s", "samsung a 10s", "самсунг a10s", "самсунг a10 c"]
 
@@ -76,7 +75,7 @@ samsungA41 = ["samsung a41", "samsunga41", "samsung a 41", "самсунг a41"]
 
 samsungA5 = ["samsung a5", "samsunga5", "samsung a 5", "самсунг a5"]
 
-samsungA51 = ["samsung a51", "samsunga51", "samsung a 51", "самсунг a51"]
+samsungA51 = ["samsung a51", "samsunga51", "samsung a 51", "самсунг а51", "самсунг a51"]
 
 samsungA6 = ["samsung a6", "samsunga6", "samsung a 6", "самсунг a6","samsung a6+", "samsunga6+", "samsung a 6+", "самсунг a6+", "samsung a6 plus", "samsunga6plus", "samsung a 6plus", "самсунг a6 плюс"]
 

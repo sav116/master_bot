@@ -3,5 +3,4 @@ __pycache__/
 idea
 .DS_Store
 logfile.log
-bot.db
 .env
