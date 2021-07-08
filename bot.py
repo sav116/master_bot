@@ -13,6 +13,7 @@ bot = telebot.TeleBot(config.token)
 
 wb = openpyxl.load_workbook('prices.xlsx')
 
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     userid = message.chat.id
@@ -33,9 +34,12 @@ def send_welcome(message):
     connect.commit()
     res = q.execute("SELECT * FROM client where id is " + str(userid)).fetchone()
     if res is None:
-        bot.send_message(message.chat.id, "<b>Немного о нас:\nBlack-Izi - это Сервисный центр по ремонту телефонов, планшетов, ноутбуков.\nМы осуществляем ремонт любой сложности.\nВ сферу наших услуг в том числе входят переклейка оригинальных модульных дисплеев по заводским технологиям, BGA пайка, разблокировка iCloud, Mi, Гугл аккаунтов.\nОпыт работы наших мастеров в данной сфере более 10 лет. На все виды работ даём гарантии от 1 месяца.\nРаботать с нами вдвойне выгодно, вам также начисляются cash back баллы.</b>",parse_mode='html', reply_markup=keyboard.reg)
+        bot.send_message(message.chat.id,
+                         "<b>Немного о нас:\nBlack-Izi - это Сервисный центр по ремонту телефонов, планшетов, ноутбуков.\nМы осуществляем ремонт любой сложности.\nВ сферу наших услуг в том числе входят переклейка оригинальных модульных дисплеев по заводским технологиям, BGA пайка, разблокировка iCloud, Mi, Гугл аккаунтов.\nОпыт работы наших мастеров в данной сфере более 10 лет. На все виды работ даём гарантии от 1 месяца.\nРаботать с нами вдвойне выгодно, вам также начисляются cash back баллы.</b>",
+                         parse_mode='html', reply_markup=keyboard.reg)
     else:
         bot.send_message(userid, f"Пиветствую {message.from_user.username} в нашем боте", reply_markup=keyboard.profile)
+
 
 @bot.message_handler(commands=['admin'])
 def admin_menu(message):
@@ -46,9 +50,10 @@ def admin_menu(message):
     for i in res:
         adm.append(i[0])
     if message.chat.id in config.admins or str(message.chat.id) in adm:
-        bot.send_message(message.chat.id,"Админ панель", reply_markup=keyboard.admin)
+        bot.send_message(message.chat.id, "Админ панель", reply_markup=keyboard.admin)
     else:
-        bot.send_message(message.chat.id,"Для вас эта команда недоступна")
+        bot.send_message(message.chat.id, "Для вас эта команда недоступна")
+
 
 @bot.message_handler(content_types=['text'])
 def text_menu(message):
@@ -62,7 +67,7 @@ def text_menu(message):
             user = f"id - {i[0]}: Фамилия - {i[1]}: Имя - {i[2]}: Телефон - {i[3]}: Кэшбек - {i[5]}: Количество заказов {i[5]}: Адрес - {i[6]}"
             all_users = all_users + str(user) + "\n\n"
         bot.send_message(message.chat.id, all_users, reply_markup=keyboard.delete)
-    
+
     if message.text == "Мой профиль👤":
         try:
             bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
@@ -75,49 +80,49 @@ def text_menu(message):
             cashback = res[4]
             colvo = res[5]
             adress = res[6]
-            bot.send_message(userid,f"{name} это ваш профиль👨‍💻\n\n"\
-                f"📲Ваш номер телефона: +{phone}\n"\
-                    f"💲Кэшбек: {cashback} руб\n"\
-                        f"⚙️Количество заказов: {colvo}\n"\
-                            f"🏠Адрес вашей мастерсой: {adress}",reply_markup=keyboard.delete)
+            bot.send_message(userid, f"{name} это ваш профиль👨‍💻\n\n" \
+                                     f"📲Ваш номер телефона: +{phone}\n" \
+                                     f"💲Кэшбек: {cashback} руб\n" \
+                                     f"⚙️Количество заказов: {colvo}\n" \
+                                     f"🏠Адрес вашей мастерсой: {adress}", reply_markup=keyboard.delete)
         except Exception as e:
             bot.send_message(config.coder, "❗️Произошла ошибка ПРОФИЛЬ 60❗️\n" \
-                f"{e}")
+                                           f"{e}")
     if message.text == "Установить номер📞":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         send = bot.send_message(message.chat.id, "Введите номер☎️")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, setphone)
-    
+
     if message.text == "Назначить админа🦸":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         send = bot.send_message(message.chat.id, "Введите id будущего админа🧞")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, setadmin)
-    
+
     if message.text == "Вернуться в меню👨‍💻":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
-    
+
     if message.text == "Связаться с мастером🧑‍🔧":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         connect = sqlite3.connect('bot.db')
         q = connect.cursor()
         res = q.execute("SELECT * FROM master_phone").fetchone()
         phone = res[1]
-        bot.send_message(message.chat.id, "Есть какие-то вопросы⁉️\n"\
-            f"Обращайтесь к нашему мастеру🧑‍🔧 {phone}", reply_markup=keyboard.delete)
-    
+        bot.send_message(message.chat.id, "Есть какие-то вопросы⁉️\n" \
+                                          f"Обращайтесь к нашему мастеру🧑‍🔧 {phone}", reply_markup=keyboard.delete)
+
     if message.text == "Сделать заказ⚙️":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, "Выберите способ отправки устройства", reply_markup=keyboard.dostavka)
-    
+
     if message.text == "Узнать цену💵":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, "Выберите производителя устройства📲", reply_markup=keyboard.choice_brand)
-        #bot.clear_step_handler_by_chat_id(message.chat.id)
-        #bot.register_next_step_handler(send, send_price)
-    
+        # bot.clear_step_handler_by_chat_id(message.chat.id)
+        # bot.register_next_step_handler(send, send_price)
+
     if message.text == "Вызвать курьера🏎":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         now = datetime.now()
@@ -125,46 +130,47 @@ def text_menu(message):
         now_date = datetime.now()
         if work >= now_date:
             bot.send_message(message.chat.id, "Выбирите устройство", reply_markup=keyboard.devices)
-            
+
             delivery = "Курьер"
         else:
             bot.send_message(message.chat.id, "Отправка курьером возможна только до 13:00")
-    
+
     if message.text in config.cura:
         config.delivery[message.chat.id] = message.text
-    
+
     if message.text in config.sam:
         config.delivery[message.chat.id] = message.text
-    
+
     if message.text == "Списать балы🙍":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         send = bot.send_message(message.chat.id, "Введите айди пользователя которому нужно списать балы")
         bot.clear_step_handler_by_chat_id(message.chat.id)
-        bot.register_next_step_handler(send,min_cashback)
-    
-    
+        bot.register_next_step_handler(send, min_cashback)
+
     if message.text == "Приеду в мастерскую🔧":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, "Выбирите устройство", reply_markup=keyboard.devices)
-    
+
     if message.text == "Начислить cashback💰":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         send = bot.send_message(message.chat.id, "Введите айди пользователя которому нужно начислить cashback")
         bot.clear_step_handler_by_chat_id(message.chat.id)
-        bot.register_next_step_handler(send,add_cashback)
+        bot.register_next_step_handler(send, add_cashback)
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def answer(call):
     if call.data == "apple":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html", reply_markup=keyboard.apple_buttons)
+        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+                         reply_markup=keyboard.apple_buttons)
 
     elif "iPhone" in call.data or "ipad" in call.data or "watch" in call.data:
         brand = "apple"
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
-    if call.data == "huawei":
+    if call.data == "huawei_honor":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
                          reply_markup=keyboard.huawei_buttons)
@@ -174,34 +180,59 @@ def answer(call):
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
+    if call.data == "samsung":
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+                         reply_markup=keyboard.samsung_buttons)
+
+    elif "samsung" in call.data.lower():
+        brand = "samsung"
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+
+    if call.data == "xiaomi":
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+                         reply_markup=keyboard.xiaomi_buttons)
+
+    elif "xiaomi" in call.data.lower():
+        brand = "xiaomi"
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+
     if call.data == "reg":
-        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите свое ФИО",parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите свое ФИО", parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, register)
-    
+
     if call.data == "delete":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    
+
     if call.data == "phone":
-        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите количество",parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите количество", parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, next_step)
-    
+
     if call.data == "tablet":
-        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите количество",parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите количество", parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, next_step)
-    
+
     if call.data == "laptop":
-        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите количество",parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите количество", parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, diagnostic1)
-    
+
     if call.data == "tv":
-        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Введите количество",parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите количество", parse_mode="html")
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, diagnostic1)
-    
+
     arr = call.data.split("_")
     if arr[0] == "send":
         try:
@@ -215,33 +246,38 @@ def answer(call):
             phone = res[3]
             adress = res[6]
 
-            bot.send_message(config.chat, "<b>❗️❗️Информация о заказе❗️❗️</b>\n\n"\
-                f"👤ФИО: {surname} {name}\n"
-                    f"📞Номер телефона: +{phone}\n"\
-                        f"🌆Адрес мастерской: {adress}\n"\
-                            f"📲Модель: {arr[1]}\n"\
-                                f"🛒Количество: {arr[2]}\n"\
-                                    f"📜Проблема: {problem}\n"\
-                                        f"📦Доставка: {config.delivery[call.message.chat.id]}", parse_mode="html")
+            bot.send_message(config.chat, "<b>❗️❗️Информация о заказе❗️❗️</b>\n\n" \
+                                          f"👤ФИО: {surname} {name}\n"
+                                          f"📞Номер телефона: +{phone}\n" \
+                                          f"🌆Адрес мастерской: {adress}\n" \
+                                          f"📲Модель: {arr[1]}\n" \
+                                          f"🛒Количество: {arr[2]}\n" \
+                                          f"📜Проблема: {problem}\n" \
+                                          f"📦Доставка: {config.delivery[call.message.chat.id]}", parse_mode="html")
             bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             bot.send_message(res[0], "Ваш заказ отправлен 📤")
             q.execute(f"DELETE FROM problem where id = {call.message.chat.id}")
             connect.commit()
-            
+
         except Exception as e:
-            bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n"\
-            f"{e}")
+            bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n" \
+                                           f"{e}")
+
 
 def diagnostic1(message):
-    send = bot.send_message(message.chat.id,"Введите модель")
+    send = bot.send_message(message.chat.id, "Введите модель")
     bot.register_next_step_handler(send, diagnostic2)
+
 
 def diagnostic2(message):
     send = bot.send_message(message.chat.id, "Опишите вашу проблему")
     bot.register_next_step_handler(send, diagnostic3)
 
+
 def diagnostic3(message):
-    bot.send_message(message.chat.id,"<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>", parse_mode='html')
+    bot.send_message(message.chat.id,
+                     "<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>",
+                     parse_mode='html')
 
 
 def setadmin(message):
@@ -252,16 +288,16 @@ def setadmin(message):
             q = connect.cursor()
             res = q.execute(f"SELECT * FROM adm where id = {adm_id}").fetchone()
             if res is None:
-                q.execute("INSERT INTO adm(id) VALUES ('%s')"%(adm_id))
+                q.execute("INSERT INTO adm(id) VALUES ('%s')" % (adm_id))
                 connect.commit()
                 bot.send_message(message.chat.id, "Админ был успешно добавлен✅")
-            
+
             bot.send_message(message.chat.id, "Админ уже добавлен😌")
         except:
             bot.send_message(message.chat.id, "Ошибка❗️")
 
 
-    
+
     else:
         bot.send_message(message.chat.id, "Не корректное id❗️")
 
@@ -274,10 +310,10 @@ def next_step(message):
             bot.clear_step_handler_by_chat_id(message.chat.id)
             bot.register_next_step_handler(send, next_step1, colvo)
         else:
-            send = bot.send_message(message.chat.id, "Введите ваши модели в вормате:\n"\
-                "Модель 1\n"\
-                    "Модель 2\n"\
-                        "Медель ...")
+            send = bot.send_message(message.chat.id, "Введите ваши модели в вормате:\n" \
+                                                     "Модель 1\n" \
+                                                     "Модель 2\n" \
+                                                     "Медель ...")
             bot.clear_step_handler_by_chat_id(message.chat.id)
             bot.register_next_step_handler(send, next_step1, colvo)
 
@@ -285,7 +321,7 @@ def next_step(message):
         send = bot.send_message(message.chat.id, "Введите корректное количество")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, next_step)
-        
+
 
 def next_step1(message, colvo):
     if int(colvo) <= 1:
@@ -295,10 +331,10 @@ def next_step1(message, colvo):
         bot.register_next_step_handler(send, next_step2, colvo, model)
     else:
         model = message.text
-        send = bot.send_message(message.chat.id, "Опишите ваши проблемы\n"\
-            "Проблема 1\n"\
-                "Проблема 2\n"\
-                    "Проблема ...")
+        send = bot.send_message(message.chat.id, "Опишите ваши проблемы\n" \
+                                                 "Проблема 1\n" \
+                                                 "Проблема 2\n" \
+                                                 "Проблема ...")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, next_step2, colvo, model)
 
@@ -318,33 +354,32 @@ def next_step2(message, colvo, model):
         q.execute(f"update client set colvo = {new_colvo} where id = {userid}")
         conect.commit()
         problem = message.text
-        q.execute("INSERT INTO problem(id, info) VALUES ('%s', '%s')"%(userid, problem))
+        q.execute("INSERT INTO problem(id, info) VALUES ('%s', '%s')" % (userid, problem))
         conect.commit()
 
         key = types.InlineKeyboardMarkup()
         send = types.InlineKeyboardButton("👍Отправить", callback_data="send_{}_{}".format(model, colvo))
-        cancel = types.InlineKeyboardButton("❌Отменить",callback_data="delete")
+        cancel = types.InlineKeyboardButton("❌Отменить", callback_data="delete")
         key.row(send, cancel)
-        bot.send_message(userid,f"❗️❗️Информация о заказе❗️❗️\n\n"\
-            f"👤ФИО: {surname} {name}\n"
-                f"📞Номер телефона: +{phone}\n"\
-                    f"🌆Адрес мастерской: {adress}\n"\
-                        f"📲Модель: {model}\n"\
-                            f"🛒Количество: {colvo}\n"\
-                                f"📜Проблема: {problem}", parse_mode='html', reply_markup=key)
+        bot.send_message(userid, f"❗️❗️Информация о заказе❗️❗️\n\n" \
+                                 f"👤ФИО: {surname} {name}\n"
+                                 f"📞Номер телефона: +{phone}\n" \
+                                 f"🌆Адрес мастерской: {adress}\n" \
+                                 f"📲Модель: {model}\n" \
+                                 f"🛒Количество: {colvo}\n" \
+                                 f"📜Проблема: {problem}", parse_mode='html', reply_markup=key)
 
 
-                            
+
     except Exception as e:
-        bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n"\
-            f"{e}")
-
+        bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n" \
+                                       f"{e}")
 
 
 def register(message):
     try:
-        keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True) 
-        button_phone = types.KeyboardButton(text="Отправить телефон📞", request_contact=True) 
+        keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+        button_phone = types.KeyboardButton(text="Отправить телефон📞", request_contact=True)
         keyboard.add(button_phone)
         bot.send_message(message.chat.id, 'Номер телефона', reply_markup=keyboard)
         userid = message.chat.id
@@ -357,11 +392,12 @@ def register(message):
             name = str(data[1])
             cashback = 0
             colvo = 0
-            q.execute("INSERT INTO client(id, surname,name1, cashback,colvo) VALUES ('%s','%s','%s','%s','%s')"%(userid, surname, name,cashback,colvo))
+            q.execute("INSERT INTO client(id, surname,name1, cashback,colvo) VALUES ('%s','%s','%s','%s','%s')" % (
+            userid, surname, name, cashback, colvo))
             connect.commit()
     except e:
-        send = bot.send_message(message.chat.id, "Данные введены не корректно\n"\
-            "<b>Формат ввода: Петров Виктор Александрович</b>", parse_mode='html')
+        send = bot.send_message(message.chat.id, "Данные введены не корректно\n" \
+                                                 "<b>Формат ввода: Петров Виктор Александрович</b>", parse_mode='html')
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, register)
 
@@ -382,8 +418,9 @@ def contact(message):
             bot.clear_step_handler_by_chat_id(message.chat.id)
             bot.register_next_step_handler(send, register1)
     except Exception as e:
-        bot.send_message(config.coder, "❗️Произошла ошибка КОНТАКТЫ❗️\n"\
-            f"{e}")
+        bot.send_message(config.coder, "❗️Произошла ошибка КОНТАКТЫ❗️\n" \
+                                       f"{e}")
+
 
 def register1(message):
     try:
@@ -395,10 +432,11 @@ def register1(message):
         if res[6] is None:
             q.execute(f"update client set adress = '{adress}' where id = {userid}")
             connect.commit()
-            bot.send_message(userid, "<b>Регистрация прошла успешно</b>",parse_mode='html', reply_markup=keyboard.profile)
+            bot.send_message(userid, "<b>Регистрация прошла успешно</b>", parse_mode='html',
+                             reply_markup=keyboard.profile)
     except Exception as e:
-        bot.send_message(config.coder, "❗️Произошла ошибка РЕГИСТРАЦИЯ❗️\n"\
-            f"{e}")
+        bot.send_message(config.coder, "❗️Произошла ошибка РЕГИСТРАЦИЯ❗️\n" \
+                                       f"{e}")
 
 
 def add_cashback(message):
@@ -406,6 +444,7 @@ def add_cashback(message):
     send = bot.send_message(message.chat.id, "Введите сумму кэшека для пользователя")
     bot.clear_reply_handlers_by_message_id(message.chat.id)
     bot.register_next_step_handler(send, add_money, chat_id)
+
 
 def add_money(message, chat_id):
     summ = message.text
@@ -422,11 +461,12 @@ def add_money(message, chat_id):
             bot.send_message(chat_id, f"Вам начислен кэшбек в размере {summ} рублей")
         except Exception as e:
             bot.send_message(message.chat.id, f"Произошла ошибка")
-            
-            bot.send_message(config.coder, "❗️Произошла ошибка НАЧИСЛЕНИЯ❗️\n"\
-            f"{e}")
+
+            bot.send_message(config.coder, "❗️Произошла ошибка НАЧИСЛЕНИЯ❗️\n" \
+                                           f"{e}")
     else:
         bot.send_message(message.chat.id, "Введите корректные данные")
+
 
 def min_cashback(message):
     chat_id = message.text
@@ -436,6 +476,7 @@ def min_cashback(message):
     send = bot.send_message(message.chat.id, f"Введите сумму списания.\nДоступно {bal}руб")
     bot.clear_reply_handlers_by_message_id(message.chat.id)
     bot.register_next_step_handler(send, min_money, chat_id, bal)
+
 
 def min_money(message, chat_id, bal):
     summ = message.text
@@ -450,6 +491,7 @@ def min_money(message, chat_id, bal):
     else:
         bot.send_message(message.chat.id, "Не корректная сумма списания👿")
 
+
 def setphone(message):
     try:
         new_phone = message.text
@@ -458,12 +500,12 @@ def setphone(message):
         q = connect.cursor()
         res = q.execute("SELECT * FROM master_phone").fetchone()
         if res is None:
-            q.execute("INSERT INTO master_phone (id, phone) VALUES ('%s', '%s')"%(user_id, new_phone))
+            q.execute("INSERT INTO master_phone (id, phone) VALUES ('%s', '%s')" % (user_id, new_phone))
             connect.commit()
         else:
             q.execute(f"update master_phone set phone = {new_phone} where id = {user_id}")
             connect.commit()
-            
+
         bot.send_message(user_id, "Номер телефона установлен успешно")
     except:
         bot.send_message(user_id, "Произошла ошибка")
@@ -472,11 +514,11 @@ def setphone(message):
 def get_price(brand, model):
     ws = wb[brand]
     result = ""
-    for column in range(1,30):
+    for column in range(1, 30):
         cell_model_value = ws.cell(row=1, column=column).value
         if isinstance(cell_model_value, str):
-            if model in cell_model_value.strip():
-                result+=model+":\n\n"
+            if model.lower() in cell_model_value.strip().lower():
+                result += cell_model_value.strip() + ":\n\n"
                 for row in range(2, 50):
                     cell_price_value = str(ws.cell(row=row, column=column).value)
                     if cell_price_value != "None":

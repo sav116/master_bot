@@ -1,5 +1,6 @@
 __pycache__/*
 __pycache__/
+bot.db
 idea
 .DS_Store
 logfile.log
