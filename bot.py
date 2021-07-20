@@ -1,3 +1,6 @@
+import io
+import threading
+import requests
 import telebot
 from telebot import types
 import sqlite3
@@ -7,11 +10,33 @@ import openpyxl
 from master_bot import config
 from master_bot import keyboard
 
-from datetime import datetime, datetime, timedelta
+from datetime import datetime
 
 bot = telebot.TeleBot(config.token)
 
-wb = openpyxl.load_workbook('prices.xlsx')
+wb=None
+
+def update_google_doc(param=None):
+    while True:
+        global wb
+        response=requests.get(
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+            stream=True)
+        wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+        time.sleep(300)
+
+_update_doc=threading.Thread(target=update_google_doc)
+_update_doc.start()
+
+def force_update_google_doc():
+    while True:
+        global wb
+        response=requests.get(
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+            stream=True)
+        wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+        return "Google Doc обновлен!"
+#wb = openpyxl.load_workbook('prices.xlsx')
 
 
 @bot.message_handler(commands=['start'])
@@ -156,6 +181,12 @@ def text_menu(message):
         send = bot.send_message(message.chat.id, "Введите айди пользователя которому нужно начислить cashback")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, add_cashback)
+    if message.text == "Обновить Google Doc♻️":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, text=force_update_google_doc())
+    if message.text == "Google Doc link":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "https://docs.google.com/spreadsheets/d/1t3o7Ieawv3tDqKHvWcnT_JcOoEXbTxao2bLFTJ8KlRo/edit?usp=sharing")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -265,24 +296,45 @@ def answer(call):
 
 
 def diagnostic1(message):
-    send = bot.send_message(message.chat.id, "Введите модель")
-    bot.register_next_step_handler(send, diagnostic2)
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+    else:
+        send = bot.send_message(message.chat.id, "Введите модель")
+        bot.register_next_step_handler(send, diagnostic2)
 
 
 def diagnostic2(message):
-    send = bot.send_message(message.chat.id, "Опишите вашу проблему")
-    bot.register_next_step_handler(send, diagnostic3)
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+    else:
+        send = bot.send_message(message.chat.id, "Опишите вашу проблему")
+        bot.register_next_step_handler(send, diagnostic3)
 
 
 def diagnostic3(message):
-    bot.send_message(message.chat.id,
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+
+    else:
+        bot.send_message(message.chat.id,
                      "<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>",
                      parse_mode='html')
 
 
 def setadmin(message):
     adm_id = message.text
-    if adm_id.isdigit():
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+
+    elif adm_id.isdigit():
         try:
             connect = sqlite3.connect('bot.db')
             q = connect.cursor()
@@ -304,7 +356,12 @@ def setadmin(message):
 
 def next_step(message):
     colvo = message.text
-    if colvo.isdigit():
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+
+    elif colvo.isdigit():
         if int(colvo) <= 1:
             send = bot.send_message(message.chat.id, "Введите модель")
             bot.clear_step_handler_by_chat_id(message.chat.id)
@@ -324,7 +381,12 @@ def next_step(message):
 
 
 def next_step1(message, colvo):
-    if int(colvo) <= 1:
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+
+    elif int(colvo) <= 1:
         model = message.text
         send = bot.send_message(message.chat.id, "Опишите вашу проблему")
         bot.clear_step_handler_by_chat_id(message.chat.id)
@@ -340,40 +402,45 @@ def next_step1(message, colvo):
 
 
 def next_step2(message, colvo, model):
-    try:
-        userid = message.chat.id
-        conect = sqlite3.connect('bot.db')
-        q = conect.cursor()
-        res = q.execute(f"SELECT * FROM client where id = {userid}").fetchone()
-        surname = res[1]
-        name = res[2]
-        phone = res[3]
-        adress = res[6]
-        colvo_zakazov = res[5]
-        new_colvo = int(colvo_zakazov) + 1
-        q.execute(f"update client set colvo = {new_colvo} where id = {userid}")
-        conect.commit()
-        problem = message.text
-        q.execute("INSERT INTO problem(id, info) VALUES ('%s', '%s')" % (userid, problem))
-        conect.commit()
+    if message.text == "Вернуться в меню👨‍💻":
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Главное меню", reply_markup=keyboard.profile)
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+    else:
+        try:
+            userid = message.chat.id
+            conect = sqlite3.connect('bot.db')
+            q = conect.cursor()
+            res = q.execute(f"SELECT * FROM client where id = {userid}").fetchone()
+            surname = res[1]
+            name = res[2]
+            phone = res[3]
+            adress = res[6]
+            colvo_zakazov = res[5]
+            new_colvo = int(colvo_zakazov) + 1
+            q.execute(f"update client set colvo = {new_colvo} where id = {userid}")
+            conect.commit()
+            problem = message.text
+            q.execute("INSERT INTO problem(id, info) VALUES ('%s', '%s')" % (userid, problem))
+            conect.commit()
 
-        key = types.InlineKeyboardMarkup()
-        send = types.InlineKeyboardButton("👍Отправить", callback_data="send_{}_{}".format(model, colvo))
-        cancel = types.InlineKeyboardButton("❌Отменить", callback_data="delete")
-        key.row(send, cancel)
-        bot.send_message(userid, f"❗️❗️Информация о заказе❗️❗️\n\n" \
-                                 f"👤ФИО: {surname} {name}\n"
-                                 f"📞Номер телефона: +{phone}\n" \
-                                 f"🌆Адрес мастерской: {adress}\n" \
-                                 f"📲Модель: {model}\n" \
-                                 f"🛒Количество: {colvo}\n" \
-                                 f"📜Проблема: {problem}", parse_mode='html', reply_markup=key)
+            key = types.InlineKeyboardMarkup()
+            send = types.InlineKeyboardButton("👍Отправить", callback_data="send_{}_{}".format(model, colvo))
+            cancel = types.InlineKeyboardButton("❌Отменить", callback_data="delete")
+            key.row(send, cancel)
+            bot.send_message(userid, f"❗️❗️Информация о заказе❗️❗️\n\n" \
+                                     f"👤ФИО: {surname} {name}\n"
+                                     f"📞Номер телефона: +{phone}\n" \
+                                     f"🌆Адрес мастерской: {adress}\n" \
+                                     f"📲Модель: {model}\n" \
+                                     f"🛒Количество: {colvo}\n" \
+                                     f"📜Проблема: {problem}", parse_mode='html', reply_markup=key)
 
 
 
-    except Exception as e:
-        bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n" \
-                                       f"{e}")
+        except Exception as e:
+            bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n" \
+                                           f"{e}")
 
 
 def register(message):

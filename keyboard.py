@@ -14,6 +14,7 @@ admin = types.ReplyKeyboardMarkup(True)
 admin.add("Пользователи👤", "Начислить cashback💰")
 admin.add("Установить номер📞", "Назначить админа🦸")
 admin.add("Списать балы🙍", "Вернуться в меню👨‍💻")
+admin.add("Обновить Google Doc♻️", "Google Doc link")
 
 a = '🙊'
 profile = types.ReplyKeyboardMarkup(True)
