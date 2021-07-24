@@ -191,15 +191,17 @@ def text_menu(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def answer(call):
+    print(call.data)
     if call.data == "apple":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
                          reply_markup=keyboard.apple_buttons)
 
     elif "iPhone" in call.data or "ipad" in call.data or "watch" in call.data:
-        brand = "apple"
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        if not call.data.startswith('send_'):
+            brand = "apple"
+            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
     if call.data == "huawei_honor":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -207,9 +209,10 @@ def answer(call):
                          reply_markup=keyboard.huawei_buttons)
 
     elif "Honor" in call.data or "Huawei" in call.data:
-        brand = "huawei"
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        if not call.data.startswith('send_'):
+            brand = "huawei"
+            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
     if call.data == "samsung":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -217,9 +220,10 @@ def answer(call):
                          reply_markup=keyboard.samsung_buttons)
 
     elif "samsung" in call.data.lower():
-        brand = "samsung"
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        if not call.data.startswith('send_'):
+            brand = "samsung"
+            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
     if call.data == "xiaomi":
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -227,9 +231,10 @@ def answer(call):
                          reply_markup=keyboard.xiaomi_buttons)
 
     elif "xiaomi" in call.data.lower():
-        brand = "xiaomi"
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        if not call.data.startswith('send_'):
+            brand = "xiaomi"
+            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
     if call.data == "reg":
         send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -367,10 +372,8 @@ def next_step(message):
             bot.clear_step_handler_by_chat_id(message.chat.id)
             bot.register_next_step_handler(send, next_step1, colvo)
         else:
-            send = bot.send_message(message.chat.id, "Введите ваши модели в вормате:\n" \
-                                                     "Модель 1\n" \
-                                                     "Модель 2\n" \
-                                                     "Медель ...")
+            send = bot.send_message(message.chat.id, "Введите модели ваших устройств:\n" \
+                                                     "модель 1, модель 2 ...\n")
             bot.clear_step_handler_by_chat_id(message.chat.id)
             bot.register_next_step_handler(send, next_step1, colvo)
 
@@ -393,10 +396,8 @@ def next_step1(message, colvo):
         bot.register_next_step_handler(send, next_step2, colvo, model)
     else:
         model = message.text
-        send = bot.send_message(message.chat.id, "Опишите ваши проблемы\n" \
-                                                 "Проблема 1\n" \
-                                                 "Проблема 2\n" \
-                                                 "Проблема ...")
+        send = bot.send_message(message.chat.id, "Опишите ваши проблемы:\n" \
+                                                 "проблема 1, проблема 2 ... \n")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, next_step2, colvo, model)
 

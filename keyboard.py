@@ -143,7 +143,7 @@ x_b10 = types.InlineKeyboardButton("Redmi 4a/4x/Note 4x", callback_data="Xiaomi 
 x_b11 = types.InlineKeyboardButton("Redmi 5/5a/5 plus/Note 5/Note 5a", callback_data="Xiaomi Redmi 5")
 x_b12 = types.InlineKeyboardButton("Redmi 6/6A/Note 6 pro", callback_data="Xiaomi Redmi 6a")
 x_b13 = types.InlineKeyboardButton("Redmi 7/7A/Note 7/Note 7 pro", callback_data="Xiaomi Redmi 7")
-x_b14 = types.InlineKeyboardButton("Redmi 8/8a/Note8/Note 8 pro", callback_data="Xiaomi Redmi 8")
+x_b14 = types.InlineKeyboardButton("Redmi 8/8a/Note 8/Note 8 pro/Note 8 T", callback_data="Xiaomi Redmi 8")
 x_b15 = types.InlineKeyboardButton("Redmi 9/Note 9/Note 9s/Note 9 Pro", callback_data="Xiaomi Redmi 9")
 x_b16 = types.InlineKeyboardButton("Redmi 9a/9c", callback_data="Xiaomi Redmi 9a")
 xiaomi_buttons.add(x_b1,x_b2,x_b3)
