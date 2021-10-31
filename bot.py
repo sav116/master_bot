@@ -14,29 +14,52 @@ from datetime import datetime
 
 bot = telebot.TeleBot(config.token)
 
-wb=None
+wb = None
+
+
+# def update_google_doc(param=None):
+#     while True:
+#         global wb
+#         response=requests.get(
+#             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+#             stream=True)
+#         wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+#         time.sleep(300)
+#
+# _update_doc=threading.Thread(target=update_google_doc)
+# _update_doc.start()
+#
+# def force_update_google_doc():
+#     while True:
+#         global wb
+#         response=requests.get(
+#             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+#             stream=True)
+#         wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+#         return "Google Doc обновлен!"
 
 def update_google_doc(param=None):
     while True:
         global wb
-        response=requests.get(
-            "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+        response = requests.get(
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vRVDJabzTpcOkIVsAmmCQ5xIrGbZvun7ax0c3u8tjkcpqsCEZtmihXF_aHGGkd1U0KyJjNsO-bgY89c/pub?output=xlsx",
             stream=True)
-        wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+        wb = openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
         time.sleep(300)
 
-_update_doc=threading.Thread(target=update_google_doc)
+
+_update_doc = threading.Thread(target=update_google_doc)
 _update_doc.start()
+
 
 def force_update_google_doc():
     while True:
         global wb
-        response=requests.get(
-            "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
+        response = requests.get(
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vRVDJabzTpcOkIVsAmmCQ5xIrGbZvun7ax0c3u8tjkcpqsCEZtmihXF_aHGGkd1U0KyJjNsO-bgY89c/pub?output=xlsx",
             stream=True)
-        wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
+        wb = openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
         return "Google Doc обновлен!"
-#wb = openpyxl.load_workbook('prices.xlsx')
 
 
 @bot.message_handler(commands=['start'])
@@ -186,7 +209,8 @@ def text_menu(message):
         bot.send_message(message.chat.id, text=force_update_google_doc())
     if message.text == "Google Doc link":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        bot.send_message(message.chat.id, "https://docs.google.com/spreadsheets/d/1t3o7Ieawv3tDqKHvWcnT_JcOoEXbTxao2bLFTJ8KlRo/edit?usp=sharing")
+        bot.send_message(message.chat.id,
+                         "https://docs.google.com/spreadsheets/d/1cerKLVOwcbSgs6UQLJBUysapv_b2ACi6TlvHzxKhZJ8")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -203,38 +227,73 @@ def answer(call):
             bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
+    # if call.data == "huawei_honor":
+    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+    #                      reply_markup=keyboard.huawei_buttons)
+    #
+    # elif "Honor" in call.data or "Huawei" in call.data:
+    #     if not call.data.startswith('send_'):
+    #         brand = "huawei"
+    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+    #
+    # if call.data == "samsung":
+    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+    #                      reply_markup=keyboard.samsung_buttons)
+    #
+    # elif "samsung" in call.data.lower():
+    #     if not call.data.startswith('send_'):
+    #         brand = "samsung"
+    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+    #
+    # if call.data == "xiaomi":
+    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
+    #                      reply_markup=keyboard.xiaomi_buttons)
+    #
+    # elif "xiaomi" in call.data.lower():
+    #     if not call.data.startswith('send_'):
+    #         brand = "xiaomi"
+    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
     if call.data == "huawei_honor":
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-                         reply_markup=keyboard.huawei_buttons)
-
-    elif "Honor" in call.data or "Huawei" in call.data:
-        if not call.data.startswith('send_'):
-            brand = "huawei"
-            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Huawei/Honor или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, huawei_honor_prices)
 
     if call.data == "samsung":
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-                         reply_markup=keyboard.samsung_buttons)
-
-    elif "samsung" in call.data.lower():
-        if not call.data.startswith('send_'):
-            brand = "samsung"
-            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Samsung или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, samsung_prices)
 
     if call.data == "xiaomi":
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-                         reply_markup=keyboard.xiaomi_buttons)
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Xiaomi или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, xiaomi_prices)
 
-    elif "xiaomi" in call.data.lower():
-        if not call.data.startswith('send_'):
-            brand = "xiaomi"
-            bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
+    if call.data == "oppo":
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Oppo или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, oppo_prices)
+
+    if call.data == "realmi":
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Realmi или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, realmi_prices)
+
+    if call.data == "vivo":
+        send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                     text="Введите модель устройства Vivo или кодовое название", parse_mode="html")
+        bot.clear_step_handler_by_chat_id(call.message.chat.id)
+        bot.register_next_step_handler(send, vivo_prices)
 
     if call.data == "reg":
         send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -328,8 +387,8 @@ def diagnostic3(message):
 
     else:
         bot.send_message(message.chat.id,
-                     "<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>",
-                     parse_mode='html')
+                         "<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>",
+                         parse_mode='html')
 
 
 def setadmin(message):
@@ -357,6 +416,218 @@ def setadmin(message):
 
     else:
         bot.send_message(message.chat.id, "Не корректное id❗️")
+
+def prepare_model_string(model_string):
+    model_name = ""
+    code_name = ""
+    code_name_start = False
+    for i in model_string:
+        if i == "(":
+            code_name_start = True
+            continue
+        if i == ")":
+            code_name_start = False
+            continue
+        if code_name_start:
+            code_name += i
+        if not code_name_start:
+            model_name+= i
+    return model_name, code_name
+
+def code_name_is_perhaps(text):
+    digit = False
+    letter = False
+    for i in text:
+        if i.isdigit():
+            digit = True
+        if i.isalpha():
+            letter = True
+        if digit and letter:
+            return True
+    return False
+
+def model_in_model_name(model, model_name):
+    print(model_name)
+    print(model)
+    model_name_ = model_name.split()
+    for i in model_name_:
+        if i == model:
+            return True
+    return False
+
+def vivo_prices(message):
+    brand = 'vivo'
+    model = message.text.lower()
+    ws = wb[brand]
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip().lower():
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
+
+def realmi_prices(message):
+    brand = 'realmi'
+    model = message.text.lower()
+    ws = wb[brand]
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip().lower():
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
+
+def oppo_prices(message):
+    brand = 'oppo'
+    model = message.text.lower()
+    ws = wb[brand]
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip().lower():
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
+
+def xiaomi_prices(message):
+    brand = 'xiaomi'
+    model = message.text.lower()
+    ws = wb[brand]
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip().lower():
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
+
+def samsung_prices(message):
+    brand = 'samsung'
+    model = message.text.lower()
+    ws = wb[brand]
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            if model in cell_model_value.strip().lower():
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
+
+def huawei_honor_prices(message):
+    brand = 'huawei'
+    model = message.text.lower()
+    if model == '10':
+        model='honor 10 f'
+    if model == '20':
+        model='honor 20 '
+    if model == '30':
+        model='honor 30 '
+    ws = wb[brand]
+    code_name_is_perhaps_ = code_name_is_perhaps(model)
+    result = ""
+    for column in range(1, 150):
+        cell_model_value = ws.cell(row=1, column=column).value
+        if isinstance(cell_model_value, str):
+            # print(cell_model_value.strip().lower())
+            model_name, codename = prepare_model_string(cell_model_value.strip().lower())
+            #if model_in_model_name(model, model_name) or (code_name_is_perhaps_ and model in codename):
+            print(model_name)
+            if model in model_name or (code_name_is_perhaps_ and model in codename):
+                print(cell_model_value.strip().lower())
+                if result == "":
+                    result += cell_model_value.strip() + ":\n"
+                    for row in range(2, 50):
+                        cell_price_value = str(ws.cell(row=row, column=column).value)
+                        if cell_price_value != "None":
+                            result += cell_price_value + '\n'
+                else:
+                    result += "\n* * * * * * * * * * * * * * * * * * * * * *\n\n"
+                    result += cell_model_value.strip() + ":\n"
+                for row in range(2, 50):
+                    cell_price_value = str(ws.cell(row=row, column=column).value)
+                    if cell_price_value != "None":
+                        result += cell_price_value + '\n'
+    if result == "":
+        bot.send_message(message.chat.id, "Модель не найдена!")
+    else:
+        bot.send_message(message.chat.id, result)
 
 
 def next_step(message):
@@ -461,7 +732,7 @@ def register(message):
             cashback = 0
             colvo = 0
             q.execute("INSERT INTO client(id, surname,name1, cashback,colvo) VALUES ('%s','%s','%s','%s','%s')" % (
-            userid, surname, name, cashback, colvo))
+                userid, surname, name, cashback, colvo))
             connect.commit()
     except e:
         send = bot.send_message(message.chat.id, "Данные введены не корректно\n" \
