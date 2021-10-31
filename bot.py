@@ -7,8 +7,8 @@ import sqlite3
 import time
 import openpyxl
 
-from master_bot import config
-from master_bot import keyboard
+import config
+import keyboard
 
 from datetime import datetime
 
