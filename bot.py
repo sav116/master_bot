@@ -737,8 +737,10 @@ def sending_message(message):
     q = connect.cursor()
     all_id = q.execute("select id from client").fetchall()
     for id in all_id:
-        bot.send_message(id[0], message.text)
-
+        try:
+            bot.send_message(id[0], message.text)
+        except:
+            pass
 def add_money(message, chat_id):
     summ = message.text
     if summ.isdigit():
