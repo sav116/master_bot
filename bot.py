@@ -17,27 +17,6 @@ bot = telebot.TeleBot(config.token)
 wb = None
 
 
-# def update_google_doc(param=None):
-#     while True:
-#         global wb
-#         response=requests.get(
-#             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
-#             stream=True)
-#         wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
-#         time.sleep(300)
-#
-# _update_doc=threading.Thread(target=update_google_doc)
-# _update_doc.start()
-#
-# def force_update_google_doc():
-#     while True:
-#         global wb
-#         response=requests.get(
-#             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTysMODR55FGpx2G1S6nfFxVcFQb90pysFa_LOSCjtKWeoP5lSkIo0wD4VPQ6J9FtNoX4ZOWsmQMfzV/pub?output=xlsx",
-#             stream=True)
-#         wb=openpyxl.load_workbook(filename=io.BytesIO(response.content), data_only=True)
-#         return "Google Doc обновлен!"
-
 def update_google_doc(param=None):
     while True:
         global wb
@@ -81,6 +60,7 @@ def send_welcome(message):
         )''')
     connect.commit()
     res = q.execute("SELECT * FROM client where id is " + str(userid)).fetchone()
+    print(res)
     if res is None:
         bot.send_message(message.chat.id,
                          "<b>Немного о нас:\nBlack-Izi - это Сервисный центр по ремонту телефонов, планшетов, ноутбуков.\nМы осуществляем ремонт любой сложности.\nВ сферу наших услуг в том числе входят переклейка оригинальных модульных дисплеев по заводским технологиям, BGA пайка, разблокировка iCloud, Mi, Гугл аккаунтов.\nОпыт работы наших мастеров в данной сфере более 10 лет. На все виды работ даём гарантии от 1 месяца.\nРаботать с нами вдвойне выгодно, вам также начисляются cash back баллы.</b>",
@@ -168,8 +148,6 @@ def text_menu(message):
     if message.text == "Узнать цену💵":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, "Выберите производителя устройства📲", reply_markup=keyboard.choice_brand)
-        # bot.clear_step_handler_by_chat_id(message.chat.id)
-        # bot.register_next_step_handler(send, send_price)
 
     if message.text == "Вызвать курьера🏎":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
@@ -204,9 +182,17 @@ def text_menu(message):
         send = bot.send_message(message.chat.id, "Введите айди пользователя которому нужно начислить cashback")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, add_cashback)
+
+    if "Сделать рассылку" in message.text:
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        send = bot.send_message(message.chat.id, "Введите сообщения для рассылки всем пользователям")
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+        bot.register_next_step_handler(send, sending_message)
+
     if message.text == "Обновить Google Doc♻️":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id, text=force_update_google_doc())
+
     if message.text == "Google Doc link":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         bot.send_message(message.chat.id,
@@ -227,38 +213,6 @@ def answer(call):
             bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
 
-    # if call.data == "huawei_honor":
-    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-    #                      reply_markup=keyboard.huawei_buttons)
-    #
-    # elif "Honor" in call.data or "Huawei" in call.data:
-    #     if not call.data.startswith('send_'):
-    #         brand = "huawei"
-    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
-    #
-    # if call.data == "samsung":
-    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-    #                      reply_markup=keyboard.samsung_buttons)
-    #
-    # elif "samsung" in call.data.lower():
-    #     if not call.data.startswith('send_'):
-    #         brand = "samsung"
-    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
-    #
-    # if call.data == "xiaomi":
-    #     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #     bot.send_message(chat_id=call.message.chat.id, text="Выберите модель", parse_mode="html",
-    #                      reply_markup=keyboard.xiaomi_buttons)
-    #
-    # elif "xiaomi" in call.data.lower():
-    #     if not call.data.startswith('send_'):
-    #         brand = "xiaomi"
-    #         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    #         bot.send_message(chat_id=call.message.chat.id, text=get_price(brand, call.data), parse_mode="html")
     if call.data == "huawei_honor":
         send = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                      text="Введите модель устройства Huawei/Honor или кодовое название", parse_mode="html")
@@ -389,7 +343,6 @@ def diagnostic3(message):
         bot.send_message(message.chat.id,
                          "<b>Для более детальной информации по вашей модели, свяжитесь с нашим мастером</b>",
                          parse_mode='html')
-
 
 def setadmin(message):
     adm_id = message.text
@@ -629,7 +582,6 @@ def huawei_honor_prices(message):
     else:
         bot.send_message(message.chat.id, result)
 
-
 def next_step(message):
     colvo = message.text
     if message.text == "Вернуться в меню👨‍💻":
@@ -653,7 +605,6 @@ def next_step(message):
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, next_step)
 
-
 def next_step1(message, colvo):
     if message.text == "Вернуться в меню👨‍💻":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
@@ -671,7 +622,6 @@ def next_step1(message, colvo):
                                                  "проблема 1, проблема 2 ... \n")
         bot.clear_step_handler_by_chat_id(message.chat.id)
         bot.register_next_step_handler(send, next_step2, colvo, model)
-
 
 def next_step2(message, colvo, model):
     if message.text == "Вернуться в меню👨‍💻":
@@ -714,13 +664,13 @@ def next_step2(message, colvo, model):
             bot.send_message(config.coder, "❗️Произошла ошибка ЗАЯВКА 144❗️\n" \
                                            f"{e}")
 
-
 def register(message):
+    print(message.text)
     try:
         keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
         button_phone = types.KeyboardButton(text="Отправить телефон📞", request_contact=True)
         keyboard.add(button_phone)
-        bot.send_message(message.chat.id, 'Номер телефона', reply_markup=keyboard)
+        bot.send_message(message.chat.id, 'Нажмите на кнопку "Отправить телефон📞"', reply_markup=keyboard)
         userid = message.chat.id
         connect = sqlite3.connect('bot.db')
         q = connect.cursor()
@@ -739,7 +689,6 @@ def register(message):
                                                  "<b>Формат ввода: Петров Виктор Александрович</b>", parse_mode='html')
         bot.clear_step_handler_by_chat_id(call.message.chat.id)
         bot.register_next_step_handler(send, register)
-
 
 @bot.message_handler(content_types=['contact'])
 def contact(message):
@@ -777,13 +726,18 @@ def register1(message):
         bot.send_message(config.coder, "❗️Произошла ошибка РЕГИСТРАЦИЯ❗️\n" \
                                        f"{e}")
 
-
 def add_cashback(message):
     chat_id = message.text
     send = bot.send_message(message.chat.id, "Введите сумму кэшека для пользователя")
     bot.clear_reply_handlers_by_message_id(message.chat.id)
     bot.register_next_step_handler(send, add_money, chat_id)
 
+def sending_message(message):
+    connect = sqlite3.connect('bot.db')
+    q = connect.cursor()
+    all_id = q.execute("select id from client").fetchall()
+    for id in all_id:
+        bot.send_message(id[0], message.text)
 
 def add_money(message, chat_id):
     summ = message.text
