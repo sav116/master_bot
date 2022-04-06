@@ -32,4 +32,4 @@ jobs:
             --header 'Authorization: 12345' \
             --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
             "repository": "${{ secrets.DOCKER_NAME }}",
-            "tag": "'$GITHUB_SHA'"}'
+            "tag": "'{$GITHUB_SHA}'"}'
