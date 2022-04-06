@@ -25,11 +25,12 @@ jobs:
     steps:
       - name: Set tag to env
         run: env
-#    - name: Send webhook for deploy
-#      run: |
-#        curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} \
-#        --header 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' \
-#        --header 'content-type: application/json' \
+    - name: Send webhook for deploy
+      run: |
+        curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} \
+        --header 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' \
+        --header 'content-type: application/json' \
+        --data 'owner=${{ secrets.DOCKER_LOGIN }}&repository=${{ secrets.DOCKER_NAME }}&tag=${GITHUB_SHA}'
 #        --data '{
 #         "owner": "${{ secrets.DOCKER_LOGIN }}",
 #         "repository": "${{ secrets.DOCKER_NAME }}",
