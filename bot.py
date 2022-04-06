@@ -827,5 +827,4 @@ while True:
         bot.polling(none_stop=True, interval=0)
     except Exception as e:
         print(e)
-
         time.sleep(15)
