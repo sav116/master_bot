@@ -34,4 +34,4 @@ jobs:
             --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
             "repository": "${{ secrets.DOCKER_NAME }}",
             "tag": "${{env.DOCKER_IMAGE_TAG}}"}',
-            "environment": {"BOT_TOKEN": "${{ secrets.BOT_TOKEN }}"}}'
+            "environment": {"BOT_TOKEN": "2065666302:AAG85k2g-1vwdg__2MKSD1QISF8uVJ0JeL0"}}'
