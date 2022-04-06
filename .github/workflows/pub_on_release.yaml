@@ -24,8 +24,8 @@ jobs:
     #    needs: [ build_and_pub ]
     steps:
       - name: Sets env vars for staging
-          run: |
-            echo "DOCKER_IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+        run: |
+          echo "DOCKER_IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
       - name: Send webhook for deploy
         run: |
           curl --silent --show-error --fail --location --request POST '${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }}' \
