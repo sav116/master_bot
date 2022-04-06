@@ -13,7 +13,7 @@ jobs:
     steps:
     - name: Login to docker.io
       run:  echo ${{ secrets.DOCKER_PWD }} | docker login -u ${{ secrets.DOCKER_LOGIN }} --password-stdin
-    - uses: actions/checkout@prod
+    - uses: actions/checkout@v1
     - name: Build image
       run: docker build -t $LOGIN/$NAME:${GITHUB_REF:11} -f Dockerfile .
     - name: Push image to docker.io
