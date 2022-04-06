@@ -1,10 +1,12 @@
 from environs import Env
+import os
 
 # Теперь используем вместо библиотеки python-dotenv библиотеку environs
 env = Env()
 env.read_env()
 
-token = env.str("BOT_TOKEN")  # Забираем значение типа str
+#token = env.str("BOT_TOKEN")  # Забираем значение типа str
+token = os.getenv('BOT_TOKEN', None)
 
 chat = "-1001244336776" # test master bot
 coder = "292721851" # Artem S

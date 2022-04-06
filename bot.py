@@ -44,7 +44,7 @@ def force_update_google_doc():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     userid = message.chat.id
-    connect = sqlite3.connect('bot.db')
+    connect = sqlite3.connect('/data/bot.db')
     q = connect.cursor()
     q.execute(""" CREATE TABLE IF NOT EXISTS client(
         id TEXT, surname TEXT, name1 TEXT,phone TEXT, cashback INTEGER, colvo INTEGER, adress TEXT
@@ -72,7 +72,7 @@ def send_welcome(message):
 @bot.message_handler(commands=['admin'])
 def admin_menu(message):
     adm = []
-    connect = sqlite3.connect('bot.db')
+    connect = sqlite3.connect('/data/bot.db')
     q = connect.cursor()
     res = q.execute("SELECT * FROM adm").fetchall()
     for i in res:
@@ -87,7 +87,7 @@ def admin_menu(message):
 def text_menu(message):
     if message.text == "Пользователи👤":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        conenct = sqlite3.connect('bot.db')
+        conenct = sqlite3.connect('/data/bot.db')
         q = conenct.cursor()
         res = q.execute("SELECT * FROM client").fetchall()
         all_users = "Все зарегистрированые пользователи\n\n"
@@ -100,7 +100,7 @@ def text_menu(message):
         try:
             bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
             userid = str(message.chat.id)
-            conenct = sqlite3.connect('bot.db')
+            conenct = sqlite3.connect('/data/bot.db')
             q = conenct.cursor()
             res = q.execute(f"SELECT * FROM client where id = {userid}").fetchone()
             name = res[2]
@@ -134,7 +134,7 @@ def text_menu(message):
 
     if message.text == "Связаться с мастером🧑‍🔧":
         bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        connect = sqlite3.connect('bot.db')
+        connect = sqlite3.connect('/data/bot.db')
         q = connect.cursor()
         res = q.execute("SELECT * FROM master_phone").fetchone()
         phone = res[1]
@@ -286,7 +286,7 @@ def answer(call):
     if arr[0] == "send":
         try:
 
-            connect = sqlite3.connect("bot.db")
+            connect = sqlite3.connect("/data/bot.db")
             q = connect.cursor()
             res = q.execute(f"SELECT * FROM client where id = {call.message.chat.id}").fetchone()
             problem = q.execute(f"SELECT info FROM problem where id = {call.message.chat.id}").fetchone()[0]
@@ -353,7 +353,7 @@ def setadmin(message):
 
     elif adm_id.isdigit():
         try:
-            connect = sqlite3.connect('bot.db')
+            connect = sqlite3.connect('/data/bot.db')
             q = connect.cursor()
             res = q.execute(f"SELECT * FROM adm where id = {adm_id}").fetchone()
             if res is None:
@@ -631,7 +631,7 @@ def next_step2(message, colvo, model):
     else:
         try:
             userid = message.chat.id
-            conect = sqlite3.connect('bot.db')
+            conect = sqlite3.connect('/data/bot.db')
             q = conect.cursor()
             res = q.execute(f"SELECT * FROM client where id = {userid}").fetchone()
             surname = res[1]
@@ -672,7 +672,7 @@ def register(message):
         keyboard.add(button_phone)
         bot.send_message(message.chat.id, 'Нажмите на кнопку "Отправить телефон📞"', reply_markup=keyboard)
         userid = message.chat.id
-        connect = sqlite3.connect('bot.db')
+        connect = sqlite3.connect('/data/bot.db')
         q = connect.cursor()
         res = q.execute(f"SELECT * FROM client where id is " + str(userid)).fetchone()
         if res is None:
@@ -696,7 +696,7 @@ def contact(message):
         userid = message.chat.id
         if message.contact is not None:
             phone = message.contact.phone_number
-            connect = sqlite3.connect('bot.db')
+            connect = sqlite3.connect('/data/bot.db')
             q = connect.cursor()
             res = q.execute(f"SELECT * FROM client where id = '{userid}'").fetchone()
             if res[3] is None:
@@ -714,7 +714,7 @@ def register1(message):
     try:
         userid = message.chat.id
         adress = str(message.text)
-        connect = sqlite3.connect('bot.db')
+        connect = sqlite3.connect('/data/bot.db')
         q = connect.cursor()
         res = q.execute(f"SELECT * FROM client where id = '{userid}'").fetchone()
         if res[6] is None:
@@ -733,7 +733,7 @@ def add_cashback(message):
     bot.register_next_step_handler(send, add_money, chat_id)
 
 def sending_message(message):
-    connect = sqlite3.connect('bot.db')
+    connect = sqlite3.connect('/data/bot.db')
     q = connect.cursor()
     all_id = q.execute("select id from client").fetchall()
     for id in all_id:
@@ -746,7 +746,7 @@ def add_money(message, chat_id):
     if summ.isdigit():
         try:
             summ = int(summ)
-            connect = sqlite3.connect('bot.db')
+            connect = sqlite3.connect('/data/bot.db')
             q = connect.cursor()
             balik = q.execute(f"SELECT cashback FROM client where id = {chat_id}").fetchone()[0]
             balik = int(balik + summ)
@@ -765,7 +765,7 @@ def add_money(message, chat_id):
 
 def min_cashback(message):
     chat_id = message.text
-    connect = sqlite3.connect('bot.db')
+    connect = sqlite3.connect('/data/bot.db')
     q = connect.cursor()
     bal = q.execute(f"SELECT cashback FROM client where id = {chat_id}").fetchone()[0]
     send = bot.send_message(message.chat.id, f"Введите сумму списания.\nДоступно {bal}руб")
@@ -777,7 +777,7 @@ def min_money(message, chat_id, bal):
     summ = message.text
     if summ.isdigit() and int(summ) <= int(bal):
         new_summ = int(bal) - int(summ)
-        connect = sqlite3.connect('bot.db')
+        connect = sqlite3.connect('/data/bot.db')
         q = connect.cursor()
         q.execute(f"update client set cashback = {new_summ} where id = {chat_id}")
         connect.commit()
@@ -791,7 +791,7 @@ def setphone(message):
     try:
         new_phone = message.text
         user_id = message.chat.id
-        connect = sqlite3.connect('bot.db')
+        connect = sqlite3.connect('/data/bot.db')
         q = connect.cursor()
         res = q.execute("SELECT * FROM master_phone").fetchone()
         if res is None:
