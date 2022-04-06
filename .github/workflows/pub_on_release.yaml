@@ -5,23 +5,23 @@ on:
     branches: [ master ]
 
 jobs:
-  #  build_and_pub:
-  #    runs-on: ubuntu-latest
-  #    env:
-  #      LOGIN: ${{ secrets.DOCKER_LOGIN }}
-  #      NAME: ${{ secrets.DOCKER_NAME }}
-  #    steps:
-  #      - name: Login to docker.io
-  #        run: echo ${{ secrets.DOCKER_PWD }} | docker login -u ${{ secrets.DOCKER_LOGIN }} --password-stdin
-  #      - uses: actions/checkout@v1
-  #      - name: Build image
-  #        run: docker build -t $LOGIN/$NAME:${GITHUB_SHA} -f Dockerfile .
-  #      - name: Push image to docker.io
-  #        run: docker push $LOGIN/$NAME:${GITHUB_SHA}
+    build_and_pub:
+      runs-on: ubuntu-latest
+      env:
+        LOGIN: ${{ secrets.DOCKER_LOGIN }}
+        NAME: ${{ secrets.DOCKER_NAME }}
+      steps:
+        - name: Login to docker.io
+          run: echo ${{ secrets.DOCKER_PWD }} | docker login -u ${{ secrets.DOCKER_LOGIN }} --password-stdin
+        - uses: actions/checkout@v1
+        - name: Build image
+          run: docker build -t $LOGIN/$NAME:${GITHUB_SHA} -f Dockerfile .
+        - name: Push image to docker.io
+          run: docker push $LOGIN/$NAME:${GITHUB_SHA}
 
   deploy:
     runs-on: ubuntu-latest
-    #    needs: [ build_and_pub ]
+        needs: [ build_and_pub ]
     steps:
       - name: Sets env vars for staging
         run: |
