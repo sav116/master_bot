@@ -23,6 +23,8 @@ jobs:
     needs: [build_and_pub]
     steps:
     - name: Set tag to env
-      run: echo ::set-env name=RELEASE_VERSION::$(echo ${GITHUB_SHA})
+      with:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: echo ::set-env name=RELEASE_VERSION::$(echo ${GITHUB_SHA})
     - name: Send webhook for deploy
       run: "curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} -H 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' -H 'Content-Type: application/json' -d '{\"owner\": \"${{ secrets.DOCKER_LOGIN }}\", \"repository\": \"${{ secrets.DOCKER_NAME }}\", \"tag\": \"${{ env.RELEASE_VERSION }}\", \"ports\": {\"8080\": 8080}}'"
