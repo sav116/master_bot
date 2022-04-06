@@ -32,4 +32,4 @@ jobs:
             --header 'Authorization: 12345' \
             --data-raw '{"owner": "sav116",
             "repository": "master_bot",
-            "tag": "${GITHUB_SHA}"}'
+            "tag": "$GITHUB_SHA"}'
