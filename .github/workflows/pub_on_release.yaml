@@ -25,5 +25,4 @@ jobs:
     - name: Set tag to env
       run: echo RELEASE_VERSION=${GITHUB_SHA}
     - name: Send webhook for deploy
-      run: |
-      "curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} -H 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' -H 'Content-Type: application/json' -d '{\"owner\": \"${{ secrets.DOCKER_LOGIN }}\", \"repository\": \"${{ secrets.DOCKER_NAME }}\", \"tag\": \"${{ env.RELEASE_VERSION }}\", \"ports\": {\"8080\": 8080}}'"
+      run: "curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} -H 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' -H 'Content-Type: application/json' -d '{\"owner\": \"${{ secrets.DOCKER_LOGIN }}\", \"repository\": \"${{ secrets.DOCKER_NAME }}\", \"tag\": \"${{ env.RELEASE_VERSION }}\", \"ports\": {\"8080\": 8080}}'"
