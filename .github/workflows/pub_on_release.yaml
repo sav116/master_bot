@@ -21,7 +21,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-      needs: [ build_and_pub ]
+    needs: [ build_and_pub ]
     steps:
       - name: Sets env vars for staging
         run: |
