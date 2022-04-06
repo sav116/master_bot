@@ -32,6 +32,6 @@ jobs:
         --data '{
          "owner": "${{ secrets.DOCKER_LOGIN }}",
          "repository": "${{ secrets.DOCKER_NAME }}",
-         "tag": $GITHUB_SHA,
+         "tag": env.GITHUB_SHA,
          "ports": "8080:8080"
          }'
