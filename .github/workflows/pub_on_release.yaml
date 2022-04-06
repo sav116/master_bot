@@ -27,7 +27,7 @@ jobs:
         run: env
       - name: Send webhook for deploy
         run: |
-          curl --silent --show-error --fail --location --request POST '185.174.136.216:5000' \
+          curl --silent --show-error --fail --location --request POST '${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }}' \
             --header 'content-type: application/json' \
             --header 'Authorization: 12345' \
             --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
