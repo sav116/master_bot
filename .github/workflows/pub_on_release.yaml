@@ -27,12 +27,9 @@ jobs:
         run: env
       - name: Send webhook for deploy
         run: |
-          curl --silent --show-error --fail -X POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} \
-          -H 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' \
+          curl --location --silent --show-error --fail --request POST ${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }} \
           -H 'content-type: application/json' \
-          -d 'owner=${{ secrets.DOCKER_LOGIN }}&repository=${{ secrets.DOCKER_NAME }}&tag=9257d5bcf1ca9989157dfaa9eef6049198aa6301'
-#        --data '{
-#         "owner": "${{ secrets.DOCKER_LOGIN }}",
-#         "repository": "${{ secrets.DOCKER_NAME }}",
-#         "tag": ${GITHUB_SHA}
-#         }'
+          -H 'Authorization: ${{ secrets.DEPLOYMENT_TOKEN }}' \
+          -data-raw '{"owner": "sav116",
+            "repository": "master_bot",
+            "tag": "${GITHUB_SHA}"}'
