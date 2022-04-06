@@ -30,6 +30,6 @@ jobs:
           curl --silent --show-error --fail --location --request POST '185.174.136.216:5000' \
             --header 'content-type: application/json' \
             --header 'Authorization: 12345' \
-            --data-raw '{"owner": "${{LOGIN}}",
-            "repository": "${{NAME}}",
+            --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
+            "repository": "${{ secrets.DOCKER_NAME }}",
             "tag": "9257d5bcf1ca9989157dfaa9eef6049198aa6301"}'
