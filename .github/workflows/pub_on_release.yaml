@@ -19,19 +19,19 @@ jobs:
       - name: Push image to docker.io
         run: docker push $LOGIN/$NAME:${GITHUB_SHA}
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [ build_and_pub ]
-    steps:
-      - name: Sets env vars for staging
-        run: |
-          echo "DOCKER_IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
-      - name: Send webhook for deploy
-        run: |
-          curl --silent --show-error --fail --location --request POST '${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }}' \
-            --header 'content-type: application/json' \
-            --header 'Authorization: 12345' \
-            --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
-            "repository": "${{ secrets.DOCKER_NAME }}",
-            "tag": "${{env.DOCKER_IMAGE_TAG}}",
-            "environment": {"BOT_TOKEN": "${{ secrets.BOT_TOKEN }}"}}'
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: [ build_and_pub ]
+#     steps:
+#       - name: Sets env vars for staging
+#         run: |
+#           echo "DOCKER_IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+#       - name: Send webhook for deploy
+#         run: |
+#           curl --silent --show-error --fail --location --request POST '${{ secrets.DEPLOYMENT_SERVER_IP }}:${{ secrets.DEPLOYMENT_SERVER_PORT }}' \
+#             --header 'content-type: application/json' \
+#             --header 'Authorization: 12345' \
+#             --data-raw '{"owner": "${{ secrets.DOCKER_LOGIN }}",
+#             "repository": "${{ secrets.DOCKER_NAME }}",
+#             "tag": "${{env.DOCKER_IMAGE_TAG}}",
+#             "environment": {"BOT_TOKEN": "${{ secrets.BOT_TOKEN }}"}}'
